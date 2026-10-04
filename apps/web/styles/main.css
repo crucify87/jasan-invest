@@ -6,3 +6,5 @@
 .brand{ text-align:center }
 .brand small{margin-left:0}
 @media(max-width:700px){.brand{display:flex;align-items:center;gap:10px;text-align:left;padding-bottom:9px}.brand-image{width:44px;height:44px;border-radius:9px;margin:0;flex-shrink:0}.brand small{display:none}}
+
+.metric>.label,.metric>.value,.metric>.hint{display:block}.metric-link{text-align:left;width:100%;min-width:0;transition:box-shadow .15s,border-color .15s}.metric-link:hover{background:#f6f9f3;border-color:#8ba58e;box-shadow:0 4px 14px #18372f12}.metric-link.main-metric:hover{background:#244b3e}.metric-link:focus-visible{outline:3px solid #92ba95;outline-offset:3px}.metric-action{display:block;margin-top:12px;font-size:11px;font-weight:600;color:var(--green)}.main-metric .metric-action{color:#c6dec8}
