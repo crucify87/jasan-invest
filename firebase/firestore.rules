@@ -1,0 +1,59 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function verified() { return signedIn() && (request.auth.token.get('email_verified', false) == true || request.auth.token.get('phone_number', '') != ''); }
+    function admin() { return verified() && request.auth.uid == 'Y56JWvSynpfT0H2WNJ2agxwpzdE3' && request.auth.token.firebase.get('sign_in_second_factor', '') == 'totp'; }
+    function owner(uid) { return verified() && request.auth.uid == uid; }
+    function approved(uid) { return owner(uid) && (admin() || get(/databases/$(database)/documents/members/$(uid)).data.status == 'approved'); }
+    function validProfile(d) {
+      return d.name is string && d.name.size() > 0 && d.name.size() <= 80
+        && d.email == request.auth.token.get('email', '')
+        && d.phone == request.auth.token.get('phone_number', '')
+        && d.consentVersion == '2026-10-07';
+    }
+    match /members/{uid} {
+      allow get: if owner(uid) || admin();
+      allow list: if admin() && request.query.limit <= 100;
+      allow create: if owner(uid) && request.resource.data.keys().hasOnly(['name','email','phone','status','consentVersion','createdAt','updatedAt'])
+        && validProfile(request.resource.data) && request.resource.data.status == 'pending'
+        && request.resource.data.createdAt == request.time && request.resource.data.updatedAt == request.time;
+      allow update: if admin() && uid != request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status','updatedAt','lastActionId'])
+        && request.resource.data.status in ['approved','rejected','suspended']
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.lastActionId is string
+        && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastActionId)).data.actor == request.auth.uid
+        && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastActionId)).data.target == uid
+        && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastActionId)).data.status == request.resource.data.status
+        && getAfter(/databases/$(database)/documents/audit/$(request.resource.data.lastActionId)).data.at == request.time;
+      allow delete: if false;
+    }
+    match /portfolios/{uid} {
+      allow get: if approved(uid);
+      allow create, update: if approved(uid)
+        && request.resource.data.keys().hasOnly(['data','updatedAt'])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.data is map
+        && request.resource.data.data.keys().hasOnly(['version','demo','accounts','holdings','debts','transactions','income','goals','flows','history','alerts'])
+        && request.resource.data.data.version == 1 && request.resource.data.data.demo == false
+        && request.resource.data.data.accounts is list && request.resource.data.data.holdings is list
+        && request.resource.data.data.debts is list && request.resource.data.data.transactions is list
+        && request.resource.data.data.income is list && request.resource.data.data.goals is list
+        && request.resource.data.data.flows is list && request.resource.data.data.history is list
+        && request.resource.data.data.alerts is list;
+      allow list, delete: if false;
+    }
+    match /audit/{id} {
+      allow read: if admin();
+      allow create: if admin() && request.resource.data.keys().hasOnly(['actor','target','status','at'])
+        && request.resource.data.actor == request.auth.uid && request.resource.data.target is string
+        && request.resource.data.status in ['approved','rejected','suspended']
+        && request.resource.data.at == request.time
+        && getAfter(/databases/$(database)/documents/members/$(request.resource.data.target)).data.lastActionId == id
+        && getAfter(/databases/$(database)/documents/members/$(request.resource.data.target)).data.status == request.resource.data.status;
+      allow update, delete: if false;
+    }
+    match /{document=**} { allow read, write: if false; }
+  }
+}

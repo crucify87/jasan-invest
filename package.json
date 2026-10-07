@@ -1,0 +1,16 @@
+{
+  "name": "jasan-invest",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check apps/web/scripts/app.js && node --check apps/web/scripts/auth.js && python scripts/check.py",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-jasan-invest 'node --test tests/firestore.test.mjs'",
+    "build": "python scripts/build.py",
+    "test:app": "node --test tests/app.test.mjs"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "5.0.2",
+    "firebase": "12.4.0",
+    "firebase-tools": "14.22.0"
+  }
+}

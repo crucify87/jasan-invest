@@ -1,36 +1,27 @@
-# 자산과투자사이 (jasan-invest)
+# 자산과투자사이 · jasan-invest
 
-모바일·PC 개인 자산 및 투자 관리 앱입니다. 앱 화면 이름은 ‘자산노트’입니다.
+모바일·PC 개인 자산 및 투자 관리 앱. Firebase 회원 인증, 관리자 가입 승인, 회원별 Firestore 저장을 사용합니다. Cloudflare Pages 배포용 정적 웹앱입니다.
 
-## 프로젝트 구조
+## 폴더
 
-| 경로 | 역할 |
-| --- | --- |
-| `apps/web/` | 모바일·PC 웹앱 프로젝트 |
-| `apps/web/index.html` | 화면 구조와 진입점 |
-| `apps/web/styles/main.css` | 디자인과 반응형 레이아웃 |
-| `apps/web/scripts/app.js` | 데이터, 계산, 화면, 입력·파일 처리 |
-| `docs/` | 기능·데이터·작업 안내 |
-| `scripts/` | 개발 및 검증 도구 |
-| `index.html` | 루트 접속 시 웹앱으로 이동 |
-
-현재 실제 구현 프로젝트는 웹앱 하나이며, 모바일도 같은 반응형 웹앱을 사용합니다.
-
-## 실행
+- `apps/web/`: 웹앱, 로그인, 관리자 화면, 스타일, 이미지
+- `firebase/firestore.rules`: 회원별 접근 및 관리자 보안 규칙
+- `tests/`: Firestore 보안 규칙 에뮬레이터 테스트
+- `scripts/`: 로컬 실행, 검사, Cloudflare 빌드
+- `docs/`: 개발 및 운영 안내
 
 ```bash
-git clone https://github.com/crucify87/jasan-invest.git
-cd jasan-invest
+npm ci
+npm run check
+npm run test:rules
+npm run build
 python scripts/serve.py
 ```
 
-http://localhost:8000 에서 사용하세요. 별도 패키지 설치와 빌드는 없습니다.
+**실제 사용 전 [Firebase·Cloudflare 설정 안내](docs/firebase-cloudflare.md)를 완료하세요.** 보안 규칙 게시, 인증 공급자, 관리자 TOTP, App Check 및 공개 전 개인정보 안내 확정이 필요합니다. Firebase 웹 설정만으로 이러한 설정이 배포되지는 않습니다.
 
-## 확인
+Cloudflare Pages: build command `python scripts/build.py`, output `dist`, production branch `main`.
 
-```bash
-node --check apps/web/scripts/app.js
-python scripts/check.py
-```
+현재 기능: 계좌·자산·투자·거래·배당·이자·부채·목표·현금흐름·일정 관리, CSV 가져오기·내보내기, JSON 백업·복원. 거래 입력이 보유 수량·현금 잔액을 자동 변경하지 않으며 시세·환율은 수동입니다.
 
-자세한 기능과 제약은 [앱 안내](docs/app-guide.md), 수정할 파일과 작업 절차는 [개발 안내](docs/development.md)를 참고하세요.
+이전 브라우저 데이터는 자동 이전하지 않습니다. 이전 앱의 JSON 백업을 새 앱에서 복원하세요.
