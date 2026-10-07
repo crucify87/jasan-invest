@@ -6,4 +6,4 @@ export const firebaseConfig = {
 };
 export const ADMIN_UID = 'Y56JWvSynpfT0H2WNJ2agxwpzdE3';
 // Configure a reCAPTCHA Enterprise site key before enabling production App Check.
-export const APP_CHECK_SITE_KEY = '';
+export const APP_CHECK_SITE_KEY = '6Lcce-MtAAAAAC2jK7Wh0b-7wclSQmFEXo7heez0';
