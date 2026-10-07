@@ -83,3 +83,21 @@ npm run build
 - https://firebase.google.com/docs/firestore/security/rules-conditions
 - https://firebase.google.com/docs/app-check/web/recaptcha-enterprise-provider
 - https://developers.cloudflare.com/pages/framework-guides/deploy-anything/
+
+## 현재 배포 대상: Cloudflare Workers
+
+주소: https://jasan-invest.crucify87.workers.dev/
+
+이 주소는 Pages가 아닌 Workers입니다. 저장소 루트의 `wrangler.jsonc`는 `jasan-invest` Worker에 `dist`의 정적 파일만 배포하도록 설정합니다. 기존 위의 Pages 설정은 Pages를 선택할 때만 사용합니다.
+
+Cloudflare Workers의 GitHub 빌드 연동 설정:
+
+- 저장소: `crucify87/jasan-invest`, 브랜치: `main`, 루트: 저장소 루트.
+- 빌드 명령: `python scripts/build.py`.
+- 배포 명령: `npx wrangler@4 deploy`.
+- Wrangler 자체 배포도 `build.command`로 같은 공개 파일 빌드를 수행합니다.
+- Firebase Authentication 승인 도메인과 reCAPTCHA Enterprise 허용 도메인에 `jasan-invest.crucify87.workers.dev`를 추가합니다.
+- App Check 콘솔에 사이트 키를 등록해도 저장소의 `APP_CHECK_SITE_KEY`는 자동으로 채워지지 않습니다. 해당 웹 설정에 동일한 공개 사이트 키를 입력하고 배포해야 합니다.
+- 사이트 키가 비어 있는 동안에는 App Check가 초기화되지 않습니다. 적용(enforcement) 활성화 여부는 Firebase 콘솔에서 별도로 확인합니다.
+
+Workers에 연결된 계정과 Firebase 콘솔의 설정 권한은 웹 설정 코드에 포함되지 않습니다. 커밋 자체가 실제 배포나 인증 성공을 증명하지는 않습니다.
