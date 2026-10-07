@@ -2,11 +2,10 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     function signedIn() { return request.auth != null; }
-    function verified() { return signedIn() && (request.auth.token.get('email_verified', false) == true || request.auth.token.get('phone_number', '') != ''); }
     // Re-enable together with ADMIN_MFA_REQUIRED in auth.js after TOTP setup.
     function requireAdminMfa() { return false; }
-    function admin() { return verified() && request.auth.uid == 'Y56JWvSynpfT0H2WNJ2agxwpzdE3' && (!requireAdminMfa() || request.auth.token.firebase.get('sign_in_second_factor', '') == 'totp'); }
-    function owner(uid) { return verified() && request.auth.uid == uid; }
+    function admin() { return signedIn() && request.auth.uid == 'Y56JWvSynpfT0H2WNJ2agxwpzdE3' && (!requireAdminMfa() || request.auth.token.firebase.get('sign_in_second_factor', '') == 'totp'); }
+    function owner(uid) { return signedIn() && request.auth.uid == uid; }
     function approved(uid) { return owner(uid) && (admin() || get(/databases/$(database)/documents/members/$(uid)).data.status == 'approved'); }
     function validProfile(d) {
       return d.name is string && d.name.size() > 0 && d.name.size() <= 80
