@@ -5,9 +5,14 @@
   "assets": {
     "directory": "./dist",
     "html_handling": "auto-trailing-slash",
-    "not_found_handling": "none"
+    "not_found_handling": "none",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*"
+    ]
   },
   "build": {
     "command": "python scripts/build.py"
-  }
+  },
+  "main": "workers/quotes.js"
 }
