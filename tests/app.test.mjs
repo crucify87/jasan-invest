@@ -38,3 +38,27 @@ b.eval("editing={key:'holdings',id:'h'}");
 b.node('#form').onsubmit({preventDefault(){},target:{name:'종목',category:'ETF',price:'60,000',targetPct:'20',buyPrice:'45,000',quoteSymbol:'AAPL',quoteExchange:'NASDAQ'}});
 await new Promise(resolve=>setImmediate(resolve));assert.equal(b.eval('db.holdings[0].qty'),15);assert.equal(b.eval('db.holdings[0].openingQty'),10);assert.equal(b.eval('db.holdings[0].targetPct'),20);assert.equal(b.eval('db.holdings[0].buyPrice'),45000);assert.equal(b.eval('db.holdings[0].quoteSymbol'),'AAPL');assert.equal(b.eval('db.accounts[0].balance'),699000);
 });
+
+test('goal planning calculates monthly annual shortfall and partial calendar years',()=>{
+const b=boot();const p=b.eval("goalPlan({target:16000000,monthly:500000,date:'2027-03-31'},10000000,'2026-10-15')");
+assert.equal(p.months,6);assert.equal(p.remaining,6000000);assert.equal(p.requiredMonthly,1000000);assert.equal(p.requiredYearly,12000000);assert.equal(p.projected,13000000);assert.equal(p.extra,500000);assert.equal(p.shortfall,3000000);assert.equal(p.yearly[0].months,3);assert.equal(p.yearly[0].needed,3000000);assert.equal(p.yearly[1].needed,3000000);
+});
+test('goal plan handles manual funds, negative net worth, rounding and expired deadlines',()=>{
+const b=boot();
+let p=b.eval("goalPlan({target:100,monthly:34,date:'2026-12-31',goalBasis:'manual',goalFunds:0},999999,'2026-10-15')");
+assert.equal(p.start,0);assert.equal(p.requiredMonthly,34);assert.equal(p.yearly.reduce((n,x)=>n+x.needed,0),100);assert.equal(p.shortfall,0);
+p=b.eval("goalPlan({target:1000000,monthly:0,date:'2026-11-30'},-1000000,'2026-10-15')");assert.equal(p.requiredMonthly,1000000);
+p=b.eval("goalPlan({target:100,monthly:0,date:'2026-10-14'},0,'2026-10-15')");assert.equal(p.requiredMonthly,null);assert.equal(p.expired,true);assert.equal(p.months,0);
+p=b.eval("goalPlan({target:100,monthly:0,date:'2026-10-15'},100,'2026-10-15')");assert.equal(p.achieved,true);assert.equal(p.requiredMonthly,0);
+});
+test('goal management renders requirements and monthly yearly plans for legacy goals',()=>{
+const b=boot();b.emit('asset-load',null);b.eval("db.goals.push({id:'g',name:'목표',target:1000000,monthly:10000,date:'2030-12-31'});page='goals';render()");
+const html=b.node('#content').innerHTML;for(const text of ['필요 월 저축액','연간 환산','월별 필요금액','연도별 필요금액','달성에 필요한 항목','월 추가 확보액'])assert(html.includes(text));
+});
+
+test('goal form saves manual earmarked amount with comma formatting',async()=>{
+const b=boot();b.emit('asset-load',null);b.ctx.window.assetCloud={save:async()=>{}};b.ctx.FormData=class{constructor(v){this.v=v;}*[Symbol.iterator](){yield*Object.entries(this.v);}};
+b.eval("editing={key:'goals',id:null}");
+b.node('#form').onsubmit({preventDefault(){},target:{name:'목표',target:'10,000,000',monthly:'500,000',date:'2030-12-31',goalBasis:'manual',goalFunds:'1,000,000'}});
+await new Promise(resolve=>setImmediate(resolve));assert.equal(b.eval('db.goals.length'),1);assert.equal(b.eval('db.goals[0].goalFunds'),1000000);assert.equal(b.eval('db.goals[0].goalBasis'),'manual');
+});
